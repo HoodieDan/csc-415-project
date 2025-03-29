@@ -1,264 +1,264 @@
-import React from "react";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import React, { useEffect, useState } from "react";
 import BriefCard from "../../components/dashboard/BriefCard";
-import InventoryTable, {
-	InventoryItem,
-} from "@/components/inventory/InventoryTable";
+import InventoryTable, { InventoryItem } from "@/components/inventory/InventoryTable";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
-	Dialog,
-	DialogContent,
-	DialogDescription,
-	DialogHeader,
-	DialogTitle,
-	DialogTrigger,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+    DialogClose,
 } from "@/components/ui/dialog";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
-import {
-	Form,
-	FormControl,
-	FormField,
-	FormItem,
-	FormLabel,
-	FormMessage,
-} from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
+import ApiClient from "@/components/ApiClient";
+import { toast } from "react-toastify";
 
 const Inventory: React.FC = () => {
-	const data = [
-		{ title: "Total Categories", content: 3 },
-		{ title: "Total Products", content: 50 },
-		{ title: "Production rate (per day)", content: 25 },
-	];
+    const [isLoading, setIsLoading] = useState(false);
+    const [error, setError] = useState("");
+    const [inventory, setInventory] = useState<InventoryItem[]>([]);
+    const data = [
+        { title: "Total Categories", content: 3 },
+        { title: "Total Products", content: inventory?.length },
+        { title: "Production rate (per day)", content: 25 },
+    ];
 
-	const inventoryData: InventoryItem[] = [
-		{
-			id: "1",
-			price: 30,
-			status: "In Stock",
-			quantity: 50,
-			name: "Bag",
-			category: "Clothing Items",
-		},
-		{
-			id: "2",
-			price: 10,
-			status: "Out of Stock",
-			quantity: 0,
-			name: "Shirt",
-			category: "Clothing Items",
-		},
-		{
-			id: "3",
-			price: 13,
-			status: "In Stock",
-			quantity: 50,
-			name: "Plate",
-			category: "Homeware",
-		},
-		{
-			id: "4",
-			price: 3,
-			status: "In Stock",
-			quantity: 5,
-			name: "Pen",
-			category: "Stationery",
-		},
-		{
-			id: "5",
-			price: 30,
-			status: "In Stock",
-			quantity: 50,
-			name: "Shoe",
-			category: "Clothing Items",
-		},
-		{
-			id: "6",
-			price: 30,
-			status: "In Stock",
-			quantity: 50,
-			name: "Socks",
-			category: "Clothing Items",
-		},
-	];
+    // const inventoryData: InventoryItem[] = [
+    //     {
+    //         id: "1",
+    //         price: 30,
+    //         status: "In Stock",
+    //         quantity: 50,
+    //         name: "Bag",
+    //         category: "Clothing Items",
+    //     },
+    //     {
+    //         id: "2",
+    //         price: 10,
+    //         status: "Out of Stock",
+    //         quantity: 0,
+    //         name: "Shirt",
+    //         category: "Clothing Items",
+    //     },
+    //     {
+    //         id: "3",
+    //         price: 13,
+    //         status: "In Stock",
+    //         quantity: 50,
+    //         name: "Plate",
+    //         category: "Homeware",
+    //     },
+    //     {
+    //         id: "4",
+    //         price: 3,
+    //         status: "In Stock",
+    //         quantity: 5,
+    //         name: "Pen",
+    //         category: "Stationery",
+    //     },
+    //     {
+    //         id: "5",
+    //         price: 30,
+    //         status: "In Stock",
+    //         quantity: 50,
+    //         name: "Shoe",
+    //         category: "Clothing Items",
+    //     },
+    //     {
+    //         id: "6",
+    //         price: 30,
+    //         status: "In Stock",
+    //         quantity: 50,
+    //         name: "Socks",
+    //         category: "Clothing Items",
+    //     },
+    // ];
 
-	const formSchema = z.object({
-		name: z.string().min(2, {
-			message: "Username must be at least 2 characters.",
-		}),
-		price: z.number(),
-		status: z.string().min(2, {
-			message: "Username must be at least 2 characters.",
-		}),
-		quantity: z.number(),
-		category: z.string().min(2, {
-			message: "Username must be at least 2 characters.",
-		}),
-	});
+    const fetchInventory = async () => {
+        try {
+            setIsLoading(true);
+            const response = await ApiClient.get("/product");
+            if (response.status === 200) {
+                setInventory(response.data);
+            }
+        } catch (error) {
+            console.error("Error fetching inventory:", error);
+        } finally {
+            setIsLoading(false);
+        }
+    };
+    useEffect(() => {
+        fetchInventory();
+    }, []);
+    const formSchema = z.object({
+        name: z.string().min(2, {
+            message: "Username must be at least 2 characters.",
+        }),
+        price: z.number(),
+        status: z.string().min(2, {
+            message: "Username must be at least 2 characters.",
+        }),
+        quantity: z.number(),
+        category: z.string().min(2, {
+            message: "Username must be at least 2 characters.",
+        }),
+    });
 
-	const form = useForm<z.infer<typeof formSchema>>({
-		resolver: zodResolver(formSchema),
-		defaultValues: {
-			name: "",
-			price: 0,
-			status: "Out of Stock",
-			quantity: 0,
-			category: "",
-		},
-	});
+    const form = useForm<z.infer<typeof formSchema>>({
+        resolver: zodResolver(formSchema),
+        defaultValues: {
+            name: "",
+            price: 0,
+            status: "Out of Stock",
+            quantity: 0,
+            category: "",
+        },
+    });
 
-	function onSubmit(values: z.infer<typeof formSchema>) {
-		console.log(values);
-	}
+    const [open, setOpen] = React.useState(false);
 
-	return (
-		<div>
-			<p className="mb-5">Monitor Inventory</p>
-			<div className="flex flex-wrap gap-y-3 -mx-1 mb-3">
-				{data.map((item, index) => (
-					<div key={index} className="w-full px-3 lg:w-1/3">
-						<BriefCard title={item.title} content={item.content} />
-					</div>
-				))}
-			</div>
+    const onSubmit = async (data: z.infer<typeof formSchema>) => {
+        try {
+            setIsLoading(true);
+            const response = await ApiClient.post("/product", data);
+            if (response) {
+                toast("Product created successfully", { type: "success" });
+                form.reset();
+                setOpen(false);
+                fetchInventory();
+            }
+        } catch (error: any) {
+            toast(error?.response?.data?.message || "Error creating product", { type: "error" });
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
-			<div className="flex justify-end my-3">
-				<Dialog>
-					<DialogTrigger asChild>
-						<Button variant="outline">
-							<Plus /> Add Product
-						</Button>
-					</DialogTrigger>
-					<DialogContent className="sm:max-w-md">
-						<DialogHeader>
-							<DialogTitle>New Product</DialogTitle>
-							<DialogDescription>
-								Create a new product
-							</DialogDescription>
-						</DialogHeader>
+    return (
+        <div>
+            <p className="mb-5">Monitor Inventory</p>
+            <div className="flex flex-wrap gap-y-3 -mx-1 mb-3">
+                {data.map((item, index) => (
+                    <div key={index} className="w-full px-3 lg:w-1/3">
+                        <BriefCard title={item.title} content={item.content} />
+                    </div>
+                ))}
+            </div>
 
-						<Form {...form}>
-							<form
-								onSubmit={form.handleSubmit(onSubmit)}
-								className="space-y-3"
-							>
-								<FormField
-									control={form.control}
-									name="name"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Name</FormLabel>
-											<FormControl>
-												<Input
-													placeholder="Product Name"
-													{...field}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={form.control}
-									name="price"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Price</FormLabel>
-											<FormControl>
-												<Input
-													type="number"
-													placeholder="Price"
-													{...field}
-													onChange={(e) =>
-														field.onChange(
-															Number(
-																e.target.value
-															)
-														)
-													}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={form.control}
-									name="status"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Status</FormLabel>
-											<FormControl>
-												<select
-													{...field}
-													className="form-select"
-												>
-													<option value="In Stock">
-														In Stock
-													</option>
-													<option value="Out of Stock">
-														Out of Stock
-													</option>
-												</select>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={form.control}
-									name="quantity"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Quantity</FormLabel>
-											<FormControl>
-												<Input
-													type="number"
-													placeholder="Quantity"
-													{...field}
-													onChange={(e) =>
-														field.onChange(
-															Number(
-																e.target.value
-															)
-														)
-													}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-								<FormField
-									control={form.control}
-									name="category"
-									render={({ field }) => (
-										<FormItem>
-											<FormLabel>Category</FormLabel>
-											<FormControl>
-												<Input
-													placeholder="Category"
-													{...field}
-												/>
-											</FormControl>
-											<FormMessage />
-										</FormItem>
-									)}
-								/>
-								<Button className="mt-3 w-full" type="submit">
-									Submit
-								</Button>
-							</form>
-						</Form>
-					</DialogContent>
-				</Dialog>
-			</div>
+            <div className="flex justify-end my-3">
+                <Dialog open={open} onOpenChange={setOpen}>
+                    <DialogTrigger asChild>
+                        <Button variant="outline">
+                            <Plus /> Add Product
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent className="sm:max-w-md">
+                        <DialogHeader>
+                            <DialogTitle>New Product</DialogTitle>
+                            <DialogDescription>Create a new product</DialogDescription>
+                        </DialogHeader>
 
-			<InventoryTable data={inventoryData} />
-		</div>
-	);
+                        <Form {...form}>
+                            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
+                                <FormField
+                                    control={form.control}
+                                    name="name"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Name</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="Product Name" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="price"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Price</FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    type="number"
+                                                    placeholder="Price"
+                                                    {...field}
+                                                    onChange={(e) => field.onChange(Number(e.target.value))}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="status"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Status</FormLabel>
+                                            <FormControl>
+                                                <select {...field} className="form-select">
+                                                    <option value="In Stock">In Stock</option>
+                                                    <option value="Out of Stock">Out of Stock</option>
+                                                </select>
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="quantity"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Quantity</FormLabel>
+                                            <FormControl>
+                                                <Input
+                                                    type="number"
+                                                    placeholder="Quantity"
+                                                    {...field}
+                                                    onChange={(e) => field.onChange(Number(e.target.value))}
+                                                />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <FormField
+                                    control={form.control}
+                                    name="category"
+                                    render={({ field }) => (
+                                        <FormItem>
+                                            <FormLabel>Category</FormLabel>
+                                            <FormControl>
+                                                <Input placeholder="Category" {...field} />
+                                            </FormControl>
+                                            <FormMessage />
+                                        </FormItem>
+                                    )}
+                                />
+                                <Button className="mt-3 w-full" type="submit" disabled={isLoading}>
+                                    {isLoading ? "Submitting..." : "Submit"}
+                                </Button>
+                            </form>
+                        </Form>
+                    </DialogContent>
+                </Dialog>
+            </div>
+
+            <InventoryTable data={inventory} isLoading={isLoading} />
+        </div>
+    );
 };
 
 export default Inventory;
